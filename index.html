@@ -1,0 +1,1145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reviewer Game</title>
+  <style>
+    :root{
+      --bg1:#dfeadb;
+      --bg2:#bfd0b7;
+      --panel:rgba(255,255,255,.9);
+      --panel2:#eef6ec;
+      --text:#203126;
+      --accent:#5b7e62;
+      --accent-dark:#3f5e45;
+      --accent-soft:#dbe9d7;
+      --good:#2f7d4a;
+      --bad:#b34e4e;
+      --gold:#d8b75a;
+      --shadow:0 14px 36px rgba(35,55,39,.12);
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Arial,Helvetica,sans-serif;
+      color:var(--text);
+      min-height:100vh;
+      background:
+        radial-gradient(circle at top right, rgba(255,255,255,.38), transparent 28%),
+        radial-gradient(circle at bottom left, rgba(255,255,255,.18), transparent 24%),
+        linear-gradient(180deg,var(--bg1),var(--bg2));
+      transition:background .35s ease;
+      overflow-x:hidden;
+    }
+
+    .wrap{
+      width:min(1180px,94vw);
+      margin:22px auto 40px;
+    }
+
+    .hero,.card{
+      background:var(--panel);
+      border:1px solid rgba(255,255,255,.68);
+      border-radius:26px;
+      box-shadow:var(--shadow);
+      backdrop-filter:blur(8px);
+    }
+
+    .hero{
+      padding:24px;
+      margin-bottom:18px;
+      position:relative;
+      overflow:hidden;
+    }
+
+    .hero::after{
+      content:"";
+      position:absolute;
+      width:260px;
+      height:260px;
+      right:-90px;
+      top:-90px;
+      border-radius:50%;
+      background:radial-gradient(circle, var(--accent-soft), transparent 70%);
+      pointer-events:none;
+    }
+
+    .hero-badge{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      background:var(--accent-soft);
+      color:var(--accent-dark);
+      border-radius:999px;
+      padding:8px 14px;
+      font-weight:700;
+      margin-bottom:10px;
+      box-shadow:0 6px 14px rgba(35,55,39,.08);
+    }
+
+    .chapter-icon{font-size:1.15rem}
+    .hero h1{
+      margin:0 0 10px;
+      color:var(--accent-dark);
+      font-size:clamp(1.8rem,3vw,2.6rem);
+    }
+    .hero p{
+      margin:0;
+      line-height:1.7;
+      max-width:920px;
+    }
+
+    .layout{
+      display:grid;
+      grid-template-columns:320px 1fr;
+      gap:18px;
+    }
+    @media(max-width:920px){.layout{grid-template-columns:1fr}}
+
+    .card{padding:18px}
+
+    .chapter-btn{
+      width:100%;
+      text-align:left;
+      border:none;
+      border-radius:16px;
+      background:var(--panel2);
+      padding:14px 15px;
+      margin-bottom:10px;
+      cursor:pointer;
+      font-weight:700;
+      color:var(--text);
+      transition:.18s ease;
+      box-shadow:0 4px 12px rgba(40,60,43,.06);
+    }
+
+    .chapter-btn .btn-top{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      margin-bottom:4px;
+    }
+
+    .chapter-btn .btn-icon{font-size:1.08rem}
+    .chapter-btn .btn-title{font-size:1rem}
+    .chapter-btn .btn-sub{
+      font-size:.82rem;
+      opacity:.82;
+      font-weight:600;
+    }
+
+    .chapter-btn:hover,.chapter-btn.active{
+      background:var(--accent);
+      color:#fff;
+      transform:translateY(-2px);
+    }
+
+    .muted{opacity:.85;line-height:1.6}
+    .small{font-size:.95rem}
+
+    .tags,.actions{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+    }
+    .tags{margin:12px 0 18px}
+
+    .tag{
+      background:#e2ecda;
+      border-radius:999px;
+      padding:10px 14px;
+      font-weight:700;
+      box-shadow:0 4px 10px rgba(40,60,43,.05);
+    }
+
+    button{
+      border:none;
+      border-radius:16px;
+      padding:12px 18px;
+      font-size:1rem;
+      font-weight:700;
+      cursor:pointer;
+      transition:.18s ease;
+    }
+    button:hover{transform:translateY(-2px)}
+
+    .primary{background:var(--accent);color:#fff}
+    .secondary{background:#e5eddc;color:var(--text)}
+    .sound-btn{background:#f5f9f1;color:var(--accent-dark)}
+    .hidden{display:none!important}
+
+    .topbar{
+      display:grid;
+      grid-template-columns:repeat(6,1fr);
+      gap:10px;
+      margin-bottom:16px;
+    }
+    @media(max-width:860px){.topbar{grid-template-columns:repeat(2,1fr)}}
+
+    .stat{
+      background:#f5f9f1;
+      border-radius:18px;
+      padding:12px;
+      text-align:center;
+      font-weight:700;
+      box-shadow:0 6px 14px rgba(44,66,47,.05);
+    }
+
+    .progress-wrap{margin-bottom:16px}
+    .progress-line{
+      height:12px;
+      background:#e8efe3;
+      border-radius:999px;
+      overflow:hidden;
+    }
+    .progress-line-fill{
+      height:100%;
+      width:0%;
+      background:linear-gradient(90deg,var(--accent),#95bb86);
+      transition:width .28s ease;
+      position:relative;
+    }
+    .progress-line-fill::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:linear-gradient(90deg, transparent, rgba(255,255,255,.35), transparent);
+      animation:shine 2s linear infinite;
+    }
+
+    @keyframes shine{
+      0%{transform:translateX(-100%)}
+      100%{transform:translateX(100%)}
+    }
+
+    .timerbar{
+      height:16px;
+      background:#e5ecdf;
+      border-radius:999px;
+      overflow:hidden;
+      margin:8px 0 18px;
+      box-shadow:inset 0 2px 6px rgba(0,0,0,.05);
+    }
+    .timerfill{
+      height:100%;
+      width:100%;
+      background:linear-gradient(90deg,var(--accent),#d6e99e);
+      transition:width 1s linear;
+    }
+
+    .question-panel{
+      background:linear-gradient(180deg, rgba(255,255,255,.62), rgba(239,246,234,.8));
+      border:1px solid rgba(255,255,255,.7);
+      border-radius:22px;
+      padding:18px;
+      box-shadow:0 10px 24px rgba(40,60,43,.06);
+      transition:.25s ease;
+    }
+
+    .question-title{
+      font-size:1rem;
+      font-weight:700;
+      color:var(--accent-dark);
+      margin-bottom:10px;
+      letter-spacing:.3px;
+    }
+
+    .question-text{
+      font-size:clamp(1.03rem,2vw,1.22rem);
+      line-height:1.72;
+      margin:8px 0 18px;
+      font-weight:700;
+      white-space:pre-wrap;
+    }
+
+    .choices{
+      display:grid;
+      gap:12px;
+    }
+
+    .choice{
+      width:100%;
+      text-align:left;
+      background:var(--panel2);
+      border:2px solid transparent;
+      border-radius:18px;
+      padding:15px 16px;
+      color:var(--text);
+      line-height:1.55;
+      font-size:1rem;
+      transition:.18s ease;
+      box-shadow:0 6px 14px rgba(40,60,43,.04);
+    }
+
+    .choice:hover:not(:disabled){
+      border-color:#92b193;
+      box-shadow:0 10px 18px rgba(55,87,60,.08);
+      transform:translateY(-2px);
+    }
+
+    .choice.correct{
+      background:#e2f6e5;
+      border-color:var(--good);
+      color:#184526;
+      box-shadow:0 10px 18px rgba(47,125,74,.14);
+    }
+
+    .choice.wrong{
+      background:#fde7e7;
+      border-color:var(--bad);
+      color:#6a2323;
+      box-shadow:0 10px 18px rgba(179,78,78,.12);
+    }
+
+    .result{
+      min-height:28px;
+      margin-top:16px;
+      font-weight:700;
+      font-size:1rem;
+    }
+
+    .achievements{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:16px;
+    }
+
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:10px 14px;
+      border-radius:999px;
+      background:#e2ecda;
+      font-weight:700;
+      box-shadow:0 4px 10px rgba(40,60,43,.05);
+    }
+
+    .locked{
+      opacity:.55;
+      filter:grayscale(1);
+    }
+
+    .endbox{
+      text-align:center;
+      padding:24px 18px;
+      background:#f7fbf4;
+      border-radius:22px;
+      margin-top:12px;
+      box-shadow:0 10px 24px rgba(40,60,43,.06);
+    }
+
+    .streak-fire{color:var(--gold);font-weight:700}
+
+    .pulse{animation:pulse .7s ease}
+    @keyframes pulse{
+      0%{transform:scale(1)}
+      30%{transform:scale(1.03)}
+      100%{transform:scale(1)}
+    }
+
+    .floating{
+      position:fixed;
+      pointer-events:none;
+      z-index:999;
+      font-size:18px;
+      animation:floatUp .9s ease forwards;
+    }
+
+    @keyframes floatUp{
+      0%{opacity:1;transform:translateY(0) scale(1)}
+      100%{opacity:0;transform:translateY(-36px) scale(1.15)}
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <section class="hero" id="hero">
+    <div class="hero-badge">
+      <span class="chapter-icon" id="heroIcon">🎮</span>
+      <span id="heroBadgeText">Reviewer Game</span>
+    </div>
+    <h1 id="heroTitle">Interactive Reviewer Game</h1>
+    <p id="heroDesc">
+      Tetris-style background music, answer sounds, animated progress, achievement badges,
+      saved high scores, shuffled choices, and 30 questions per chapter.
+    </p>
+  </section>
+
+  <div class="layout">
+    <aside class="card">
+      <h2 style="margin-top:0;color:var(--accent-dark);">Chapters</h2>
+      <div id="chapterButtons"></div>
+      <p class="muted small">
+        Choose a chapter and start. Every game has 30 questions, shuffled choices, timer, and score tracking.
+      </p>
+    </aside>
+
+    <main class="card">
+      <section id="homeView">
+        <h2 id="chapterTitle" style="margin-top:0;color:var(--accent-dark);">Select a chapter</h2>
+        <p id="chapterDesc" class="muted">Your chapter details will appear here.</p>
+
+        <div class="tags">
+          <div class="tag">30 Questions</div>
+          <div class="tag">Shuffled Choices</div>
+          <div class="tag">30-Second Timer</div>
+          <div class="tag">Achievements</div>
+          <div class="tag" id="highScoreTag">High Score: 0%</div>
+        </div>
+
+        <div class="actions">
+          <button class="primary" id="startBtn" disabled>Start Quiz</button>
+          <button class="sound-btn" id="soundBtn">🔊 Sound On</button>
+        </div>
+      </section>
+
+      <section id="quizView" class="hidden">
+        <div class="topbar">
+          <div class="stat" id="statChapter">Chapter</div>
+          <div class="stat" id="statQuestion">Question 1 / 30</div>
+          <div class="stat" id="statScore">Score: 0</div>
+          <div class="stat" id="statTimer">30s</div>
+          <div class="stat" id="statStreak">Streak: 0</div>
+          <div class="stat" id="statBest">Best: 0%</div>
+        </div>
+
+        <div class="progress-wrap">
+          <div class="progress-line">
+            <div class="progress-line-fill" id="progressLineFill"></div>
+          </div>
+        </div>
+
+        <div class="timerbar">
+          <div class="timerfill" id="timerFill"></div>
+        </div>
+
+        <div class="question-panel" id="questionPanel">
+          <div class="question-title" id="questionType">Exam Question</div>
+          <div class="question-text" id="questionText"></div>
+          <div class="choices" id="choicesBox"></div>
+          <div class="result" id="resultBox"></div>
+
+          <div class="achievements" id="achievementStrip">
+            <div class="badge locked" id="badge3">⭐ Combo 3</div>
+            <div class="badge locked" id="badge5">🔥 Combo 5</div>
+            <div class="badge locked" id="badge10">🏆 Score 10</div>
+            <div class="badge locked" id="badge20">💎 Score 20</div>
+          </div>
+        </div>
+
+        <div class="actions" style="margin-top:16px;">
+          <button class="secondary" id="quitBtn">Back to Chapter</button>
+        </div>
+      </section>
+
+      <section id="endView" class="hidden">
+        <div class="endbox">
+          <h2 style="margin-top:0;color:var(--accent-dark);">Chapter Finished</h2>
+          <div id="finalChapter" class="badge"></div>
+          <div id="finalScore" class="badge"></div>
+          <div id="finalPercent" class="badge"></div>
+          <div id="finalBestStreak" class="badge"></div>
+          <div id="finalHighScore" class="badge"></div>
+          <p id="finalMessage" style="font-size:1.05rem;line-height:1.6;"></p>
+          <div class="actions" style="justify-content:center;">
+            <button class="primary" id="retryBtn">Play Again</button>
+            <button class="secondary" id="backHomeBtn">Choose Another Chapter</button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<script>
+const CHAPTER_THEMES = {
+  "CHAPTER 1 - SOFTWARE AND SOFTWARE ENGINEERING": {
+    icon: "💻",
+    accent: "#5b7e62",
+    accentDark: "#3f5e45",
+    accentSoft: "#dbe9d7",
+    bg1: "#dfeadb",
+    bg2: "#bfd0b7"
+  },
+  "CHAPTER 2 - PROCESS MODELS": {
+    icon: "🧩",
+    accent: "#6f7c4d",
+    accentDark: "#4f5a33",
+    accentSoft: "#e6ebd4",
+    bg1: "#ecefd8",
+    bg2: "#ccd3ab"
+  },
+  "CHAPTER 3 - AGILE DEVELOPMENT": {
+    icon: "⚡",
+    accent: "#4d7b7d",
+    accentDark: "#35585a",
+    accentSoft: "#d9ecec",
+    bg1: "#dff0ef",
+    bg2: "#b8d5d4"
+  },
+  "CHAPTER 4 - SYSTEM ANALYSIS AND DESIGN": {
+    icon: "📊",
+    accent: "#7a6794",
+    accentDark: "#58496e",
+    accentSoft: "#e8e0f3",
+    bg1: "#eee8f8",
+    bg2: "#d1c4eb"
+  },
+  "CHAPTER 5 - PROCESS AND PROJECT METRICS": {
+    icon: "📈",
+    accent: "#9a6a55",
+    accentDark: "#704c3d",
+    accentSoft: "#f1e1da",
+    bg1: "#f6ebe6",
+    bg2: "#e1c7bb"
+  }
+};
+
+const LESSONS = {
+  "CHAPTER 1 - SOFTWARE AND SOFTWARE ENGINEERING": [
+    { title:"What is Software", text:"Software consists of instructions or computer programs, data structures that allow programs to manipulate information, and documentation that describes operation and use." },
+    { title:"Software is Engineered", text:"Software is developed or engineered rather than manufactured in the classical sense." },
+    { title:"Software Does Not Wear Out", text:"Unlike hardware, software does not wear out, although it can deteriorate because of changes and side effects." },
+    { title:"Custom-Built Software", text:"Although component-based construction is increasing, most software is still custom-built." },
+    { title:"System Software", text:"System software is a collection of programs written to service other programs and often involves hardware interaction, resource sharing, scheduling, and complex management." },
+    { title:"Application Software", text:"Application software consists of stand-alone programs that solve specific business needs and support decision making or real-time business functions." },
+    { title:"Engineering or Scientific Software", text:"Engineering and scientific software is often characterized by number-crunching algorithms and is used in areas such as simulation, design, astronomy, and manufacturing." },
+    { title:"Embedded Software", text:"Embedded software resides within a product or system and controls features and functions for users or the system itself." },
+    { title:"Product-Line Software", text:"Product-line software is designed to provide a specific capability for many different customers." },
+    { title:"Web Applications", text:"Web applications are network-centric software that range from simple hypertext content to sophisticated systems integrated with corporate databases and business applications." },
+    { title:"Artificial Intelligence Software", text:"AI software uses nonnumerical algorithms to solve complex problems and includes robotics, expert systems, pattern recognition, neural networks, theorem proving, and game playing." },
+    { title:"Legacy Software", text:"Legacy software must often change to adapt to new environments, support new business requirements, interoperate with modern systems, and remain viable in networked settings." },
+    { title:"Software Engineering", text:"Software engineering is the establishment and use of sound engineering principles to obtain economical software that is reliable and works efficiently on real machines." },
+    { title:"IEEE Definition", text:"The IEEE defines software engineering as the application of a systematic, disciplined, and quantifiable approach to the development, operation, and maintenance of software." },
+    { title:"Layered Technology", text:"Software engineering is a layered technology with a quality focus, process, methods, and tools." },
+    { title:"Process Framework", text:"A process framework includes framework activities, work tasks, work products, milestones and deliverables, quality assurance checkpoints, and umbrella activities." },
+    { title:"Framework Activities", text:"Framework activities include communication, planning, modeling, construction, and deployment." },
+    { title:"Communication", text:"Communication focuses on collaborating with customers and stakeholders to understand objectives and gather requirements." },
+    { title:"Planning", text:"Planning creates a project map that defines technical tasks, risks, resources, work products, and schedule." },
+    { title:"Modeling", text:"Modeling creates sketches or representations to better understand software requirements and design." },
+    { title:"Construction", text:"Construction combines code generation and testing to uncover errors in code." },
+    { title:"Deployment", text:"Deployment delivers software to the customer, who then evaluates it and provides feedback." },
+    { title:"Umbrella Activities", text:"Umbrella activities include project management, technical reviews, software quality assurance, configuration management, work product preparation, reusability management, measurement, and risk management." },
+    { title:"Essence of Practice", text:"The essence of practice follows four ideas: understand the problem, plan a solution, carry out the plan, and examine the result." },
+    { title:"Understand the Problem", text:"Understanding the problem means identifying stakeholders, unknowns, required data and features, smaller subproblems, and possible graphical representations." },
+    { title:"Plan the Solution", text:"Planning the solution means identifying patterns, reusable elements, subproblems, and designs that lead to effective implementation." },
+    { title:"Carry Out the Plan", text:"Carrying out the plan requires ensuring that the solution conforms to the design and that code is correct and reviewed." },
+    { title:"Examine the Result", text:"Examining the result means testing components and validating that the software satisfies required data, functions, features, and stakeholder needs." },
+    { title:"Hooker Principles", text:"Hooker’s general principles include reason it all exists, KISS, maintain the vision, think of consumers, be open to the future, plan for reuse, and think." },
+    { title:"Software Myths", text:"Software myths affect managers, customers, and practitioners, often appear believable, but lead to bad decisions if not challenged." }
+  ],
+
+  "CHAPTER 2 - PROCESS MODELS": [
+    { title:"Generic Process Model", text:"A generic process model shows software process framework activities together with umbrella activities." },
+    { title:"Process Flow", text:"Process flow can be linear, iterative, evolutionary, or parallel." },
+    { title:"Task Set", text:"A task set defines the actual work to be done, the work products to be produced, and the quality assurance filters to be applied." },
+    { title:"Process Pattern", text:"A process pattern describes a process-related problem, identifies the environment in which it occurs, and suggests proven solutions." },
+    { title:"Process Pattern Types", text:"Process pattern types include stage patterns, task patterns, and phase patterns." },
+    { title:"Process Assessment", text:"Examples of process assessment and improvement approaches include SCAMPI, CBA IPI, SPICE, and ISO 9001 for software." },
+    { title:"Prescriptive Models", text:"Prescriptive process models advocate an orderly approach to software engineering." },
+    { title:"Waterfall Model", text:"The waterfall model follows a sequential flow of communication, planning, modeling, construction, and deployment." },
+    { title:"Problems with Waterfall", text:"Problems with the waterfall model include limited flexibility for change, difficulty with unclear requirements, and delayed delivery of working software." },
+    { title:"V-Model", text:"The V-Model links development activities on one side with corresponding testing activities on the other side." },
+    { title:"Incremental Model", text:"The incremental model delivers software in multiple increments across project calendar time." },
+    { title:"Prototyping Model", text:"The prototyping model uses quick planning, quick design, construction of prototype, and delivery and feedback in an evolutionary cycle." },
+    { title:"Spiral Model", text:"The spiral model combines communication, planning, modeling, construction, and deployment with risk analysis." },
+    { title:"Concurrent Model", text:"The concurrent model represents software engineering activities as states such as under development, under review, under revision, and done." },
+    { title:"Component-Based Development", text:"Component-based development is used when reuse is a major development objective." },
+    { title:"Formal Methods", text:"Formal methods emphasize the mathematical specification of requirements." },
+    { title:"Aspect-Oriented Software Development", text:"AOSD provides a process and method for defining, specifying, designing, and constructing aspects." },
+    { title:"Unified Process", text:"The Unified Process is a use-case driven, architecture-centric, iterative, and incremental process aligned with UML." },
+    { title:"UP Phases", text:"The phases of the Unified Process are inception, elaboration, construction, transition, and production." },
+    { title:"Inception", text:"Inception includes customer communication and planning activities." },
+    { title:"Elaboration", text:"Elaboration includes communication and modeling activities." },
+    { title:"Construction Phase", text:"Construction in the Unified Process corresponds to the construction activity of the generic process." },
+    { title:"Transition", text:"Transition covers later construction work and the early part of deployment, especially delivery and feedback." },
+    { title:"Production", text:"Production coincides with deployment and continued operation of the software increment." },
+    { title:"UP Work Products", text:"UP work products include vision documents, use-case models, business cases, prototypes, analysis models, architecture descriptions, design models, software components, test plans, and support documentation." },
+    { title:"Personal Software Process", text:"The Personal Software Process includes planning, high-level design, design review, development, and postmortem." },
+    { title:"Team Software Process", text:"The Team Software Process builds self-directed teams that plan and track work, establish goals, and own their process." },
+    { title:"TSP Framework Activities", text:"TSP framework activities include project launch, high-level design, implementation, integration and test, and postmortem." },
+    { title:"Stage Patterns", text:"A stage pattern defines a problem associated with a framework activity for a process." },
+    { title:"Task Patterns", text:"A task pattern defines a problem associated with software engineering action or work task and relevant pattern language." }
+  ],
+
+  "CHAPTER 3 - AGILE DEVELOPMENT": [
+    { title:"Agile Manifesto", text:"The Agile Manifesto values individuals and interactions, working software, customer collaboration, and responding to change more than the items on the right side of those statements." },
+    { title:"What is Agility", text:"Agility means effective and adaptive response to change, effective stakeholder communication, customer involvement, team control of work, and rapid incremental delivery." },
+    { title:"Cost of Change in Agile", text:"Agile processes aim to reduce the cost of change compared with conventional software processes." },
+    { title:"Agile Process", text:"An agile process is driven by customer scenarios, uses short-lived plans, develops iteratively, delivers increments, and adapts as changes occur." },
+    { title:"Agility Principle 1", text:"The highest priority is satisfying the customer through early and continuous delivery of valuable software." },
+    { title:"Agility Principle 2", text:"Agile welcomes changing requirements, even late in development." },
+    { title:"Agility Principle 3", text:"Working software should be delivered frequently, with preference for shorter timescales." },
+    { title:"Agility Principle 4", text:"Business people and developers should work together daily throughout the project." },
+    { title:"Agility Principle 5", text:"Projects should be built around motivated individuals who receive support and trust." },
+    { title:"Agility Principle 6", text:"Face-to-face conversation is the most effective method of conveying information within a development team." },
+    { title:"Agility Principle 7", text:"Working software is the primary measure of progress." },
+    { title:"Agility Principle 8", text:"Agile promotes sustainable development with a constant pace that sponsors, developers, and users can maintain." },
+    { title:"Agility Principle 9", text:"Continuous attention to technical excellence and good design enhances agility." },
+    { title:"Agility Principle 10", text:"Simplicity, meaning maximizing the amount of work not done, is essential." },
+    { title:"Agility Principle 11", text:"The best architectures, requirements, and designs emerge from self-organizing teams." },
+    { title:"Agility Principle 12", text:"At regular intervals, the team reflects and adjusts to become more effective." },
+    { title:"Human Factors", text:"Important human factors in agile teams include competence, common focus, collaboration, decision-making ability, fuzzy problem-solving ability, mutual trust and respect, and self-organization." },
+    { title:"Extreme Programming", text:"Extreme Programming or XP is one of the most widely used agile processes and was originally proposed by Kent Beck." },
+    { title:"XP Planning", text:"XP planning begins with user stories, cost estimation, grouping stories into increments, and using project velocity for future delivery planning." },
+    { title:"XP Design", text:"XP design follows KIS, uses CRC cards, spike solutions, and refactoring." },
+    { title:"XP Coding", text:"XP coding recommends writing unit tests before coding and encourages pair programming." },
+    { title:"XP Testing", text:"XP testing executes all unit tests daily, and customer-defined acceptance tests assess visible functionality." },
+    { title:"Adaptive Software Development", text:"Adaptive Software Development emphasizes mission-driven planning, component focus, time-boxing, explicit risks, collaboration, and learning." },
+    { title:"DSDM", text:"Dynamic Systems Development Method is similar to XP and ASD and emphasizes active user involvement, empowered teams, frequent delivery, reversibility of changes, and integrated testing." },
+    { title:"Scrum", text:"Scrum partitions development work into packets, uses sprints and backlog, includes ongoing testing and documentation, and conducts very short meetings." },
+    { title:"Daily Scrum", text:"A daily Scrum commonly asks what was done since the last Scrum, whether there are obstacles, and what will be done before the next meeting." },
+    { title:"Crystal", text:"Crystal is a family of process models that allows maneuverability based on problem characteristics and emphasizes face-to-face communication and reflection workshops." },
+    { title:"Feature Driven Development", text:"FDD focuses on defining features, planning by feature, and merging design and construction." },
+    { title:"Agile Modeling", text:"Agile Modeling suggests principles such as model with a purpose, use multiple models, travel light, focus on content, know your tools, and adapt locally." },
+    { title:"Agile versus Scrum", text:"Agile is a project management philosophy, while Scrum is a specific agile methodology used to facilitate a project." }
+  ],
+
+  "CHAPTER 4 - SYSTEM ANALYSIS AND DESIGN": [
+    { title:"Primary Goal of Systems", text:"The primary goal of a system is to create value for the organization." },
+    { title:"Many Failed Systems", text:"Many failed systems were abandoned because analysts tried to build systems without understanding the organization." },
+    { title:"System Analyst", text:"A system analyst is a key person who analyzes the business, identifies opportunities for improvement, and designs information systems to implement ideas." },
+    { title:"Role of the Systems Analyst", text:"The systems analyst assists and guides the project team so the right system is developed in an effective way." },
+    { title:"Technology Problem Solving", text:"Systems analysts must understand how to apply technology to solve problems." },
+    { title:"Change Agent", text:"Systems analysts also serve as change agents who identify needed improvements, design systems to implement change, and train or motivate others to use the systems." },
+    { title:"Four Types of Diagrams", text:"Four important diagram types are context diagrams, use case diagrams, business process diagrams, and flowchart diagrams." },
+    { title:"Context Diagram", text:"A context diagram provides a highest-level visual view of how the organization fits within the outside world and shows external entities and interactions." },
+    { title:"Use Case Diagram", text:"Use case diagrams summarize system functionality at a high level using actors, use cases, and relationships." },
+    { title:"Elements of Use Case Diagram", text:"The four elements in a use case diagram are use cases, the system, actors, and associations among them." },
+    { title:"Business Process Diagram", text:"Business process diagrams help determine current capability and future state and depict processes, manual tasks, system tasks, events, gateways, sequence flows, message flows, and associations." },
+    { title:"Flowchart Diagram", text:"Flowchart diagrams depict a specific process from start to end and can be easily understood by nontechnical teams." },
+    { title:"Swim Lane Flowcharts", text:"Swim lane flowcharts provide logical layers concerning actors, responsible parts, or modules of the system." },
+    { title:"Project Team Specialization", text:"Project team specialization can include business analyst, systems analyst, infrastructure analyst, change management analyst, and project manager." },
+    { title:"Systems Analyst Specialization", text:"The systems analyst focuses on information system issues, designs the new information system, and ensures that IS standards are maintained." },
+    { title:"Business Analyst", text:"The business analyst focuses on business issues, identifies business value, improves business processes, and helps design new business processes and policies." },
+    { title:"Infrastructure Analyst", text:"The infrastructure analyst focuses on technical issues related to system interaction with the organization’s infrastructure and identifies needed infrastructure changes." },
+    { title:"Change Management Analyst", text:"The change management analyst focuses on people and management issues surrounding system installation, support, training, and overcoming resistance to change." },
+    { title:"Project Manager", text:"The project manager ensures the project is completed on time, within budget, and delivers expected value." },
+    { title:"Systems Development Life Cycle", text:"The SDLC is composed of four fundamental phases: planning, analysis, design, and implementation." },
+    { title:"Project Identification", text:"A project is identified when someone in the organization recognizes a business need to build a system." },
+    { title:"Planning Phase", text:"Planning asks why the system should be built and determines how the project team will go about building it." },
+    { title:"Analysis Phase", text:"Analysis asks who, what, when, and where the system will be and involves understanding the current situation, identifying improvements, and defining requirements." },
+    { title:"Three Analysis Steps", text:"The three basic analysis steps are analysis strategy, requirements gathering, and system proposal." },
+    { title:"Design Phase", text:"The purpose of design is to decide how to build the system after analysis determines what the business needs." },
+    { title:"System Design", text:"System design determines the overall system architecture including hardware, software, people, processing components, and communication." },
+    { title:"Implementation Phase", text:"During implementation, the system is developed or purchased, and this is usually the longest and most expensive phase." },
+    { title:"Three Implementation Steps", text:"The three implementation steps are system construction, installation, and support plan." },
+    { title:"Process and Deliverables", text:"Planning produces a project plan, analysis produces a system proposal, design produces system specification, and implementation produces the new system and maintenance plan." },
+    { title:"System Value", text:"A system succeeds when it delivers value to the organization rather than only adding technology." }
+  ],
+
+  "CHAPTER 5 - PROCESS AND PROJECT METRICS": [
+    { title:"A Good Manager Measures", text:"A good manager measures process, project, and product metrics using size or function as a basis." },
+    { title:"Why Do We Measure", text:"We measure to assess project status, track risks, uncover problem areas before they become critical, adjust workflow, and evaluate the team’s ability to control quality." },
+    { title:"Process Measurement", text:"The efficacy of a software process is measured indirectly through outcomes such as errors before release, defects after release, productivity, human effort, calendar time, and schedule conformance." },
+    { title:"Process Metrics Guidelines", text:"Metrics should be interpreted with common sense, provide feedback, never be used to appraise or threaten individuals, and should support improvement rather than punishment." },
+    { title:"Software Process Improvement", text:"Software process improvement uses a process model, improvement goals, and process metrics to create improvement recommendations." },
+    { title:"Process Metrics Categories", text:"Important process metrics include quality-related metrics, productivity-related metrics, statistical SQA data, defect removal efficiency, and reuse data." },
+    { title:"Project Metrics", text:"Project metrics are used to minimize schedule issues, mitigate risks, and assess product quality on an ongoing basis." },
+    { title:"Three Core Measurement Categories", text:"Every project should measure inputs, outputs, and results." },
+    { title:"Inputs", text:"Inputs are measures of resources such as people and tools required to do the work." },
+    { title:"Outputs", text:"Outputs are measures of the deliverables or work products created during the software engineering process." },
+    { title:"Results", text:"Results are measures that indicate the effectiveness of the deliverables." },
+    { title:"Typical Project Metrics", text:"Typical project metrics include effort per task, errors uncovered per review hour, scheduled versus actual milestone dates, changes and their characteristics, and distribution of effort on tasks." },
+    { title:"Size-Oriented Metrics", text:"Typical size-oriented metrics include errors per KLOC, defects per KLOC, cost per LOC, documentation pages per KLOC, errors per person-month, and LOC per person-month." },
+    { title:"Function-Oriented Metrics", text:"Typical function-oriented metrics include errors per FP, defects per FP, cost per FP, documentation pages per FP, and FP per person-month." },
+    { title:"Comparing LOC and FP", text:"LOC and FP can be compared across programming languages, showing that lines of code per function point vary greatly by language." },
+    { title:"Why Opt for FP", text:"Function points are programming-language independent, countable early in the process, do not penalize short implementations, and make reusable component impact easier to measure." },
+    { title:"Object-Oriented Metrics", text:"Object-oriented metrics include number of scenario scripts, support classes, average support classes per key class, and number of subsystems." },
+    { title:"WebApp Project Metrics", text:"Web application metrics include number of static pages, dynamic pages, internal links, persistent data objects, external systems interfaced, static content objects, dynamic content objects, and executable functions." },
+    { title:"Measuring Quality", text:"Quality can be measured in terms of correctness, maintainability, integrity, and usability." },
+    { title:"Correctness", text:"Correctness is the degree to which a program operates according to specification." },
+    { title:"Maintainability", text:"Maintainability is the degree to which a program is amenable to change." },
+    { title:"Integrity", text:"Integrity is the degree to which a program is impervious to outside attack." },
+    { title:"Usability", text:"Usability is the degree to which a program is easy to use." },
+    { title:"Defect Removal Efficiency", text:"Defect Removal Efficiency is computed as DRE = E divided by E plus D, where E is errors found before delivery and D is defects found after delivery." },
+    { title:"Metrics for Small Organizations", text:"Small organizations can measure queue time, evaluation effort, elapsed time, change effort, change time, errors uncovered during change, and defects uncovered after release." },
+    { title:"Establishing a Metrics Program", text:"A metrics program begins by identifying business goals, what needs to be learned, subgoals, entities and attributes, measurable goals, indicators, data elements, measures, actions, and implementation plan." },
+    { title:"Product Metrics", text:"Product metrics help evaluate the quality characteristics of the software product itself." },
+    { title:"Quality Measurement", text:"Software quality should be assessed continuously throughout the project rather than only at the end." },
+    { title:"Measure Inputs", text:"Inputs are important because they show the resources consumed during project execution." },
+    { title:"Measure Outputs", text:"Outputs matter because they show the work products and deliverables created by the team." }
+  ]
+};
+
+const chapterDescriptions = {
+  "CHAPTER 1 - SOFTWARE AND SOFTWARE ENGINEERING":"Software concepts, categories, software engineering definitions, framework activities, umbrella activities, and core software engineering ideas.",
+  "CHAPTER 2 - PROCESS MODELS":"Process models, task sets, patterns, waterfall, V-model, incremental, prototyping, spiral, concurrent, Unified Process, PSP, and TSP.",
+  "CHAPTER 3 - AGILE DEVELOPMENT":"Agile manifesto, agility principles, XP, ASD, DSDM, Scrum, Crystal, FDD, and Agile Modeling.",
+  "CHAPTER 4 - SYSTEM ANALYSIS AND DESIGN":"System analyst roles, diagrams, team specializations, SDLC phases, planning, analysis, design, and implementation.",
+  "CHAPTER 5 - PROCESS AND PROJECT METRICS":"Process metrics, project metrics, LOC vs FP, quality metrics, DRE, and metrics programs."
+};
+
+const chapterButtons = document.getElementById("chapterButtons");
+const chapterTitle = document.getElementById("chapterTitle");
+const chapterDesc = document.getElementById("chapterDesc");
+const startBtn = document.getElementById("startBtn");
+const soundBtn = document.getElementById("soundBtn");
+const highScoreTag = document.getElementById("highScoreTag");
+
+const homeView = document.getElementById("homeView");
+const quizView = document.getElementById("quizView");
+const endView = document.getElementById("endView");
+
+const statChapter = document.getElementById("statChapter");
+const statQuestion = document.getElementById("statQuestion");
+const statScore = document.getElementById("statScore");
+const statTimer = document.getElementById("statTimer");
+const statStreak = document.getElementById("statStreak");
+const statBest = document.getElementById("statBest");
+const timerFill = document.getElementById("timerFill");
+const progressLineFill = document.getElementById("progressLineFill");
+const questionPanel = document.getElementById("questionPanel");
+
+const questionText = document.getElementById("questionText");
+const questionType = document.getElementById("questionType");
+const choicesBox = document.getElementById("choicesBox");
+const resultBox = document.getElementById("resultBox");
+
+const heroIcon = document.getElementById("heroIcon");
+const heroBadgeText = document.getElementById("heroBadgeText");
+const heroTitle = document.getElementById("heroTitle");
+const heroDesc = document.getElementById("heroDesc");
+
+let currentChapter = null;
+let questions = [];
+let currentIndex = 0;
+let score = 0;
+let streak = 0;
+let bestStreak = 0;
+let timeLeft = 30;
+let timer = null;
+let locked = false;
+let soundEnabled = true;
+
+function shuffle(arr){
+  const copy = [...arr];
+  for(let i = copy.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
+
+function getHighScoreKey(chapter){
+  return "reviewer_highscore_" + chapter;
+}
+
+function getHighScore(chapter){
+  return Number(localStorage.getItem(getHighScoreKey(chapter)) || 0);
+}
+
+function setHighScore(chapter, value){
+  localStorage.setItem(getHighScoreKey(chapter), String(value));
+}
+
+function updateHighScoreTag(){
+  if(!currentChapter){
+    highScoreTag.textContent = "High Score: 0%";
+    return;
+  }
+  highScoreTag.textContent = `High Score: ${getHighScore(currentChapter)}%`;
+}
+
+function applyTheme(chapter){
+  const fallback = Object.keys(CHAPTER_THEMES)[0];
+  const t = CHAPTER_THEMES[chapter] || CHAPTER_THEMES[fallback];
+  document.documentElement.style.setProperty("--accent", t.accent);
+  document.documentElement.style.setProperty("--accent-dark", t.accentDark);
+  document.documentElement.style.setProperty("--accent-soft", t.accentSoft);
+  document.documentElement.style.setProperty("--bg1", t.bg1);
+  document.documentElement.style.setProperty("--bg2", t.bg2);
+  heroIcon.textContent = chapter ? t.icon : "🎮";
+  heroBadgeText.textContent = chapter ? "Selected Chapter" : "Reviewer Game";
+  heroTitle.textContent = chapter || "Interactive Reviewer Game";
+  heroDesc.textContent = chapterDescriptions[chapter] || "Choose a chapter and start reviewing.";
+}
+
+function renderButtons(){
+  chapterButtons.innerHTML = "";
+  Object.keys(LESSONS).forEach(name => {
+    const theme = CHAPTER_THEMES[name];
+    const btn = document.createElement("button");
+    btn.className = "chapter-btn" + (currentChapter === name ? " active" : "");
+    btn.innerHTML = `
+      <div class="btn-top">
+        <span class="btn-icon">${theme.icon}</span>
+        <span class="btn-title">${name}</span>
+      </div>
+      <div class="btn-sub">30 questions • shuffled choices</div>
+    `;
+    btn.onclick = () => selectChapter(name);
+    chapterButtons.appendChild(btn);
+  });
+}
+
+function selectChapter(name){
+  currentChapter = name;
+  renderButtons();
+  applyTheme(name);
+  chapterTitle.textContent = name;
+  chapterDesc.textContent = chapterDescriptions[name];
+  startBtn.disabled = false;
+  updateHighScoreTag();
+  showView(homeView);
+}
+
+function buildQuestionFromLesson(item, chapterName, idx, allTitles){
+  const correct = item.title;
+  const wrongPool = allTitles.filter(t => t !== correct);
+  const wrong = shuffle(wrongPool).slice(0, 3);
+  const options = shuffle([correct, ...wrong]);
+  const text = item.text.replace(/\s+/g, " ").trim();
+
+  const stems = [
+    `Which concept is described below?\n\n"${text}"`,
+    `Based on the lesson, what is the correct answer?\n\n"${text}"`,
+    `Read the statement carefully. Which topic does it refer to?\n\n"${text}"`,
+    `Which term best matches this description?\n\n"${text}"`,
+    `From ${chapterName}, identify the correct concept.\n\n"${text}"`,
+    `What is the best answer for this exam item?\n\n"${text}"`,
+    `Which topic is explained by the statement below?\n\n"${text}"`,
+    `Choose the correct answer based on the lesson content.\n\n"${text}"`,
+    `Which lesson idea is being described here?\n\n"${text}"`,
+    `Identify the correct topic for the statement below.\n\n"${text}"`
+  ];
+
+  return {
+    question: stems[idx % stems.length],
+    correct,
+    options
+  };
+}
+
+function makeQuestionBank(chapterName){
+  const items = LESSONS[chapterName];
+  const allTitles = items.map(i => i.title);
+  const bank = [];
+
+  items.forEach((item, idx) => {
+    bank.push(buildQuestionFromLesson(item, chapterName, idx, allTitles));
+  });
+
+  let i = 0;
+  while(bank.length < 30){
+    const item = items[i % items.length];
+    bank.push(buildQuestionFromLesson(item, chapterName, bank.length, allTitles));
+    i++;
+  }
+
+  return shuffle(bank).slice(0, 30);
+}
+
+function showView(view){
+  homeView.classList.add("hidden");
+  quizView.classList.add("hidden");
+  endView.classList.add("hidden");
+  view.classList.remove("hidden");
+}
+
+function resetBadges(){
+  ["badge3","badge5","badge10","badge20"].forEach(id=>{
+    document.getElementById(id).classList.add("locked");
+  });
+}
+
+function unlockBadge(id){
+  const el = document.getElementById(id);
+  if(el.classList.contains("locked")){
+    el.classList.remove("locked");
+    if(soundEnabled) playBadgeSound();
+  }
+}
+
+function updateBadges(){
+  if(streak >= 3) unlockBadge("badge3");
+  if(streak >= 5) unlockBadge("badge5");
+  if(score >= 10) unlockBadge("badge10");
+  if(score >= 20) unlockBadge("badge20");
+}
+
+function startQuiz(){
+  if(!currentChapter) return;
+  questions = makeQuestionBank(currentChapter);
+  currentIndex = 0;
+  score = 0;
+  streak = 0;
+  bestStreak = 0;
+  resetBadges();
+  statBest.textContent = `Best: ${getHighScore(currentChapter)}%`;
+  showView(quizView);
+  renderQuestion();
+  startGameTheme();
+}
+
+function renderQuestion(){
+  clearInterval(timer);
+  locked = false;
+  resultBox.textContent = "";
+  timeLeft = 30;
+
+  const q = questions[currentIndex];
+  statChapter.textContent = CHAPTER_THEMES[currentChapter].icon + " " + currentChapter.split(" - ")[0];
+  statQuestion.textContent = `Question ${currentIndex + 1} / 30`;
+  statScore.textContent = `Score: ${score}`;
+  statTimer.textContent = `${timeLeft}s`;
+  statStreak.innerHTML = `Streak: <span class="streak-fire">${streak}</span>`;
+  timerFill.style.width = "100%";
+  progressLineFill.style.width = `${(currentIndex / questions.length) * 100}%`;
+
+  questionType.textContent = "Exam Question";
+  questionText.innerText = q.question;
+
+  choicesBox.innerHTML = "";
+  const letters = ["A", "B", "C", "D"];
+
+  shuffle(q.options).forEach((option, index) => {
+    const btn = document.createElement("button");
+    btn.className = "choice";
+    btn.innerHTML = `<strong>${letters[index]}.</strong> ${option}`;
+    btn.dataset.answer = option;
+    btn.onclick = (e) => answerQuestion(btn, option === q.correct, q.correct, e);
+    choicesBox.appendChild(btn);
+  });
+
+  timer = setInterval(() => {
+    timeLeft--;
+    statTimer.textContent = `${timeLeft}s`;
+    timerFill.style.width = `${(timeLeft / 30) * 100}%`;
+    if(timeLeft <= 0){
+      clearInterval(timer);
+      timeUp();
+    }
+  }, 1000);
+}
+
+function lockChoices(){
+  locked = true;
+  document.querySelectorAll(".choice").forEach(btn => btn.disabled = true);
+}
+
+function answerQuestion(button, isCorrect, correctAnswer, evt){
+  if(locked) return;
+  lockChoices();
+  clearInterval(timer);
+
+  document.querySelectorAll(".choice").forEach(btn => {
+    if(btn.dataset.answer === correctAnswer) btn.classList.add("correct");
+  });
+
+  if(isCorrect){
+    score++;
+    streak++;
+    bestStreak = Math.max(bestStreak, streak);
+    button.classList.add("correct");
+    resultBox.textContent = streak >= 2 ? `Correct! Combo x${streak}` : "Correct!";
+    if(soundEnabled) playCorrectSound();
+    spawnFloat(evt, "✨ +1");
+    questionPanel.classList.add("pulse");
+    setTimeout(()=>questionPanel.classList.remove("pulse"), 700);
+  }else{
+    streak = 0;
+    button.classList.add("wrong");
+    resultBox.textContent = `Wrong. Correct answer: ${correctAnswer}`;
+    if(soundEnabled) playWrongSound();
+    spawnFloat(evt, "✖");
+  }
+
+  updateBadges();
+  statScore.textContent = `Score: ${score}`;
+  statStreak.innerHTML = `Streak: <span class="streak-fire">${streak}</span>`;
+  setTimeout(nextQuestion, 1200);
+}
+
+function timeUp(){
+  if(locked) return;
+  lockChoices();
+  const q = questions[currentIndex];
+  streak = 0;
+
+  document.querySelectorAll(".choice").forEach(btn => {
+    if(btn.dataset.answer === q.correct) btn.classList.add("correct");
+  });
+
+  resultBox.textContent = `Time's up! Correct answer: ${q.correct}`;
+  statStreak.innerHTML = `Streak: <span class="streak-fire">${streak}</span>`;
+  if(soundEnabled) playTimeUpSound();
+  setTimeout(nextQuestion, 1400);
+}
+
+function nextQuestion(){
+  currentIndex++;
+  if(currentIndex >= questions.length){
+    finishQuiz();
+  }else{
+    renderQuestion();
+  }
+}
+
+function finishQuiz(){
+  clearInterval(timer);
+  stopGameTheme();
+
+  const percent = Math.round((score / questions.length) * 100);
+  const currentHigh = getHighScore(currentChapter);
+  const newHigh = Math.max(currentHigh, percent);
+  setHighScore(currentChapter, newHigh);
+
+  document.getElementById("finalChapter").textContent = currentChapter;
+  document.getElementById("finalScore").textContent = `Score: ${score} / ${questions.length}`;
+  document.getElementById("finalPercent").textContent = `${percent}%`;
+  document.getElementById("finalBestStreak").textContent = `Best Streak: ${bestStreak}`;
+  document.getElementById("finalHighScore").textContent = `High Score: ${newHigh}%`;
+
+  let message = "Good try. Review again and play one more round.";
+  if(percent >= 90) message = "Excellent work. You reviewed the chapter very well.";
+  else if(percent >= 75) message = "Great job. You already understand many important lessons.";
+  else if(percent >= 60) message = "Nice work. A little more review will make this stronger.";
+
+  document.getElementById("finalMessage").textContent = message;
+  progressLineFill.style.width = "100%";
+  updateHighScoreTag();
+  showView(endView);
+}
+
+function spawnFloat(evt, text){
+  const div = document.createElement("div");
+  div.className = "floating";
+  div.textContent = text;
+  const x = evt && evt.clientX ? evt.clientX : window.innerWidth / 2;
+  const y = evt && evt.clientY ? evt.clientY : window.innerHeight / 2;
+  div.style.left = x + "px";
+  div.style.top = y + "px";
+  document.body.appendChild(div);
+  setTimeout(()=>div.remove(), 900);
+}
+
+startBtn.addEventListener("click", startQuiz);
+
+soundBtn.addEventListener("click", () => {
+  soundEnabled = !soundEnabled;
+  soundBtn.textContent = soundEnabled ? "🔊 Sound On" : "🔇 Sound Off";
+
+  if (!soundEnabled) {
+    stopGameTheme();
+  } else {
+    if (!quizView.classList.contains("hidden")) {
+      startGameTheme();
+    }
+  }
+});
+
+document.getElementById("quitBtn").addEventListener("click", () => {
+  clearInterval(timer);
+  stopGameTheme();
+  showView(homeView);
+});
+
+document.getElementById("retryBtn").addEventListener("click", startQuiz);
+
+document.getElementById("backHomeBtn").addEventListener("click", () => {
+  stopGameTheme();
+  showView(homeView);
+});
+
+/* SOUND SYSTEM */
+let audioCtx = null;
+let musicLoop = null;
+let musicPulse = null;
+
+function ensureAudio(){
+  if(!soundEnabled) return null;
+  if(!audioCtx){
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if(!Ctx) return null;
+    audioCtx = new Ctx();
+  }
+  if(audioCtx.state === "suspended") audioCtx.resume();
+  return audioCtx;
+}
+
+function playTone(freq, duration, type="square", volume=0.03, when=0){
+  const ctx = ensureAudio();
+  if(!ctx) return;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, ctx.currentTime + when);
+  gain.gain.setValueAtTime(volume, ctx.currentTime + when);
+  gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + when + duration);
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start(ctx.currentTime + when);
+  osc.stop(ctx.currentTime + when + duration);
+}
+
+function startGameTheme(){
+  if(!soundEnabled || musicLoop) return;
+
+  const melody = [
+    659,494,523,587,523,494,440,440,
+    523,659,587,523,494,523,587,659,
+    523,440,440,0,587,698,880,784,
+    698,659,523,659,587,523,494,494
+  ];
+
+  let i = 0;
+  musicLoop = setInterval(() => {
+    const note = melody[i % melody.length];
+    if(note > 0){
+      playTone(note, 0.14, "square", 0.022, 0);
+      playTone(note / 2, 0.10, "triangle", 0.010, 0.02);
+    }
+    i++;
+  }, 180);
+
+  musicPulse = setInterval(() => {
+    playTone(110, 0.08, "triangle", 0.004, 0);
+  }, 720);
+}
+
+function stopGameTheme(){
+  if(musicLoop){
+    clearInterval(musicLoop);
+    musicLoop = null;
+  }
+  if(musicPulse){
+    clearInterval(musicPulse);
+    musicPulse = null;
+  }
+}
+
+function playCorrectSound(){
+  playTone(880, 0.07, "square", 0.04, 0);
+  playTone(1047, 0.08, "square", 0.035, 0.07);
+  playTone(1319, 0.10, "triangle", 0.03, 0.14);
+}
+
+function playWrongSound(){
+  playTone(220, 0.10, "sawtooth", 0.03, 0);
+  playTone(196, 0.10, "sawtooth", 0.028, 0.08);
+  playTone(174, 0.14, "sawtooth", 0.026, 0.16);
+}
+
+function playTimeUpSound(){
+  playTone(392, 0.08, "square", 0.03, 0);
+  playTone(349, 0.08, "square", 0.03, 0.08);
+  playTone(311, 0.12, "square", 0.03, 0.16);
+}
+
+function playBadgeSound(){
+  playTone(784, 0.06, "triangle", 0.03, 0);
+  playTone(988, 0.08, "triangle", 0.03, 0.06);
+}
+
+/* INIT */
+renderButtons();
+applyTheme(null);
+updateHighScoreTag();
+</script>
+</body>
+</html>
